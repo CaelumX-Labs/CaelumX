@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-caelumx = "54Jhpem9ty1uT2Yi8cDuEWJetKwnA1iXrjXQNCsiRRpM"
+minting = "4hBkDfsK2fouULJJrKPVJwSzeBaKkG4R99A8kZrW3v9E"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,3 +16,7 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "tests/metaplex_token_metadata_program.so"
