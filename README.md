@@ -87,3 +87,9 @@ Join us in making a measurable difference for our planet, one transaction at a t
    ```bash
    git clone https://github.com/<your-username>/caelum-x.git
    cd caelum-x
+
+### License
+This project is licensed under the MIT License.
+
+### Contributing
+Feel free to fork the repo, create a pull request, and improve the project!
