@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import prisma from '../config';
 
 export async function getUserPortfolio(wallet: string) {
   // Fetch user by wallet, include balances and NFTs

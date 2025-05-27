@@ -1,5 +1,5 @@
 import { Connection, PublicKey, ParsedInstruction, ParsedTransaction } from '@solana/web3.js';
-import prisma from '../config/database';
+import prisma from '../config';
 
 const RPC_URL = process.env.SOLANA_RPC_URL!;
 const PROGRAM_ID = new PublicKey(process.env.CAELUMX_PROGRAM_ID!);

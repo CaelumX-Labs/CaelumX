@@ -1,4 +1,4 @@
-import prisma from '../config/database';
+import prisma from '../config';
 
 export async function getActiveListings() {
   // Fetch listings where status is ACTIVE
