@@ -1,0 +1,27 @@
+# Use official Node.js LTS base image
+FROM node:18-alpine
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy package.json and lock file first (for caching dependencies)
+COPY package.json yarn.lock* package-lock.json* ./
+
+# Install dependencies (use npm or yarn depending on your project)
+RUN npm install --production
+
+# Copy source code
+COPY ./src ./src
+
+# Copy any other needed files, e.g., tsconfig.json, envManager.ts, etc.
+COPY tsconfig.json ./
+COPY .env.example ./
+
+# Build the TypeScript code (adjust command if different)
+RUN npm run build
+
+# Expose port (ensure this matches your app's listening port)
+EXPOSE 3000
+
+# Start the server (adjust if your start script differs)
+CMD ["npm", "run", "start:prod"]

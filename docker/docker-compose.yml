@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile
+    container_name: caelumx-backend
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-3000}:${SERVER_PORT:-3000}"
+    env_file:
+      - ./.env
+    volumes:
+      - ./app/backend/src:/app/src
+      - ./app/backend/node_modules:/app/node_modules # optional, if you want caching node_modules
+    networks:
+      - caelumx-network
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      # Add other environment variables you use here, e.g. DATABASE_URL, etc.
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT:-3000}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:13-alpine
+    container_name: caelumx-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_USER: caelumx_user
+      POSTGRES_PASSWORD: caelumx_password
+      POSTGRES_DB: caelumx_db
+    volumes:
+      - caelumx_postgres_data:/var/lib/postgresql/data
+    networks:
+      - caelumx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caelumx_user -d caelumx_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+    container_name: caelumx-frontend
+    ports:
+      - "${FRONTEND_PORT:-3001}:${FRONTEND_PORT:-3001}"
+    env_file:
+      - ./.env
+    volumes:
+      - ./app/frontend/src:/app/src
+      - ./app/frontend/node_modules:/app/node_modules
+    networks:
+      - caelumx-network
+    depends_on:
+      backend:
+        condition: service_started
+
+networks:
+  caelumx-network:
+    driver: bridge
+
+volumes:
+  caelumx_postgres_data:

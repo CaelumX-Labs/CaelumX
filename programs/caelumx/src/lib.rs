@@ -19,7 +19,7 @@ use mpl_token_metadata::{
     types::{Creator, DataV2},
 };
 
-declare_id!("4hBkDfsK2fouULJJrKPVJwSzeBaKkG4R99A8kZrW3v9E");
+declare_id!("7VNYAn8xGrybRLic4i6vUzmbsKhHFrnZq5cAzSMoP5PL");
 
 #[program]
 pub mod minting {
