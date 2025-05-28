@@ -1,6 +1,19 @@
 import { Request, Response } from 'express';
 import * as registryService from '../services/registry.service';
 
+// Extend Express Request interface to include 'user'
+declare global {
+  namespace Express {
+    interface User {
+      wallet: string;
+      // add other properties if needed
+    }
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
 export async function createProject(req: Request, res: Response) {
   const { name, description, documents } = req.body;
   const creatorId = req.user!.wallet;

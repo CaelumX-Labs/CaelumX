@@ -8,3 +8,7 @@ export async function mintNFT(projectId: string, metadataUri: string): Promise<s
   const mint = Keypair.generate();
   return mint.publicKey.toString();
 }
+export async function burnNFT(mintAddress: string): Promise<string> {
+  // Simulate burn; replace with actual call
+  return 'tx_signature';
+}
