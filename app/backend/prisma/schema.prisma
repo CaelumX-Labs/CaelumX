@@ -3,7 +3,6 @@
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -13,6 +12,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id          String   @id @default(uuid())
   wallet      String   @unique
@@ -24,6 +24,52 @@ model User {
   retirements Retirement[]
   listings    Listing[]    @relation("UserListings")
   purchases   Purchase[]   @relation("UserPurchases")
+  projects    Project[]
+  votes       Vote[]
+
+  Proposal Proposal[]
+
+  Stake Stake[]
+
+  Fee Fee[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  status      ProjectStatus @default(PENDING)
+  documents   Document[]
+  votes       Vote[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ProjectStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  cid         String
+  name        String
+  uploadedAt  DateTime @default(now())
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  voterId   String
+  voter     User     @relation(fields: [voterId], references: [id])
+  weight    Int
+  createdAt DateTime @default(now())
 }
 
 model NFT {
@@ -89,4 +135,44 @@ model Balance {
   amount    Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Analytics {
+  id        String   @id @default(uuid())
+  type      String
+  data      Json
+  timestamp DateTime @default(now())
+}
+
+model Fee {
+  id        String   @id @default(uuid())
+  amount    BigInt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Stake {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    BigInt
+  createdAt DateTime @default(now())
+}
+
+model Proposal {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  status      ProposalStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ProposalStatus {
+  ACTIVE
+  APPROVED
+  REJECTED
 }

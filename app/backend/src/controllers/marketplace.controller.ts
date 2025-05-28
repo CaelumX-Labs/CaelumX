@@ -1,20 +1,24 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import * as marketplaceService from '../services/marketplace.service';
 
-const router = Router();
-
-/**
- * GET /api/marketplace
- * Returns all active listings.
- */
-router.get('/', async (_req: Request, res: Response) => {
+export async function createListing(req: Request, res: Response) {
+  const { nftId, price } = req.body;
+  const sellerId = req.user!.wallet;
   try {
-    const listings = await marketplaceService.getActiveListings();
-    res.json(listings);
-  } catch (err) {
-    console.error('Marketplace fetch error:', err);
-    res.status(500).json({ error: 'Failed to fetch marketplace listings' });
+    const listing = await marketplaceService.createListing(nftId, price, sellerId);
+    res.status(201).json(listing);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create listing' });
   }
-});
+}
 
-export default router;
+export async function getListings(req: Request, res: Response) {
+  const listings = await marketplaceService.getListings();
+  res.json(listings);
+}
+
+export async function handleTradeWebhook(req: Request, res: Response) {
+  const event = req.body;
+  await marketplaceService.handleTradeEvent(event);
+  res.status(200).send('OK');
+}
