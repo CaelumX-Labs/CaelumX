@@ -10,3 +10,6 @@ export async function computeDailyAnalytics() {
     },
   });
 }
+export const updateAnalytics = async () => {
+  console.log('Analytics update job running');
+};

@@ -1,16 +1,16 @@
-import express from 'express';
-import { router } from './routes';
-import { errorHandler } from './middlewares/errorHandler';
-import { rateLimiter } from './middlewares/rateLimiter';
-import env from './config/env';
+import app from './app';
+import { config } from './config';
+import logger from './config/logger';
+import fs from 'fs';
+import path from 'path';
 
-const app = express();
+const PORT = config.port;
 
-app.use(express.json());
-app.use(rateLimiter);
-app.use('/api', router);
-app.use(errorHandler);
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
-app.listen(env.PORT, () => {
-  console.log(`Server running on port ${env.PORT}`);
+app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
 });

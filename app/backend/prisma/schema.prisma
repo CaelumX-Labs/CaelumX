@@ -15,7 +15,7 @@ datasource db {
 
 model User {
   id          String   @id @default(uuid())
-  wallet      String   @unique
+  wallet      String    @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -39,7 +39,7 @@ model Project {
   name        String
   description String
   creatorId   String
-  creator     User     @relation(fields: [creatorId], references: [id])
+  creator     User     @relation(fields: [creatorId], references: [wallet])
   status      ProjectStatus @default(PENDING)
   documents   Document[]
   votes       Vote[]

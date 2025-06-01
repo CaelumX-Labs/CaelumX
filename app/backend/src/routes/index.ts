@@ -19,12 +19,23 @@ import analyticsRoutes from './analytics.routes';
 
 const router = Router();
 
-router.get('/healthz', (req, res) => res.status(200).send('OK'));
-router.use(authRoutes);
-router.use(registryRoutes);
-router.use(tokenizationRoutes);
-router.use(marketplaceRoutes);
-router.use(retirementRoutes);
-router.use(analyticsRoutes);
+// router.get('/healthz', (req, res) => res.status(200).send('OK'));
+// router.use(authRoutes);
+// router.use(registryRoutes);
+// router.use(tokenizationRoutes);
+// router.use(marketplaceRoutes);
+// router.use(retirementRoutes);
+// router.use(analyticsRoutes);
 
-export { router };
+// export { router };
+
+
+
+router.use('/auth', authRoutes);
+router.use('/registry', registryRoutes);
+router.use('/tokenization', tokenizationRoutes);
+router.use('/marketplace', marketplaceRoutes);
+router.use('/retirement', retirementRoutes);
+router.use('/analytics', analyticsRoutes);
+
+export default router;

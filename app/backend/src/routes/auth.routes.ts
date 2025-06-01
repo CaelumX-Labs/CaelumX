@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import * as authController from '../controllers/auth.controller';
-
+import { challenge } from '../controllers/auth.controller';
+import { getChallenge } from '../controllers/auth.controller';
 const router = Router();
 
-router.post('/auth/challenge', authController.getChallenge);
-router.post('/auth/verify', authController.verifySignature);
+router.post('/get-challenge', getChallenge); 
+router.post('/challenge', challenge);
 
 export default router;

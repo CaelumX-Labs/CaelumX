@@ -1,3 +1,4 @@
+import * as solanaService from '../services/solana.service';
 import { Request, Response } from 'express';
 import * as registryService from '../services/registry.service';
 
@@ -16,7 +17,7 @@ declare global {
 
 export async function createProject(req: Request, res: Response) {
   const { name, description, documents } = req.body;
-  const creatorId = req.user!.wallet;
+  const creatorId = req.user?.wallet || 'Gjgvx2rJpkD4bwr6rRkMDXzVdwYBiPf1ayzhatceZ4di'; // <-- mock here
   try {
     const project = await registryService.createProject({ name, description, creatorId }, documents || []);
     res.status(201).json(project);
@@ -43,3 +44,33 @@ export async function voteOnProject(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to vote' });
   }
 }
+
+export const submitProject = async (req: Request, res: Response) => {
+  const { name, description, documents } = req.body;
+  const creatorId = req.user?.wallet;
+
+  if (!creatorId) {
+    return res.status(401).json({ error: 'Unauthorized: Wallet not found. Please authenticate first.' });
+  }
+
+  try {
+    const project = await registryService.createProject({ name, description, creatorId }, documents || []);
+    const txSignature = await solanaService.submitProject(project.id, { name, description });
+    res.status(201).json({ project, txSignature });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+
+export const verifyProject = async (req: Request, res: Response) => {
+  const { projectId, approve } = req.body;
+  const verifierId = req.user!.wallet;
+  try {
+    const updatedProject = await registryService.verifyProject(projectId, approve, verifierId);
+    const txSignature = await solanaService.updateProjectStatus(projectId, approve ? 'APPROVED' : 'REJECTED');
+    res.json({ updatedProject, txSignature });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};

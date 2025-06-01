@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import * as analyticsController from '../controllers/analytics.controller';
+import { getDashboardData } from '../controllers/analytics.controller';
+import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 
-router.get('/analytics/overview', analyticsController.getOverview);
+router.get('/dashboard', authenticate, getDashboardData);
 
 export default router;

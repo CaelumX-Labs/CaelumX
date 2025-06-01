@@ -8,6 +8,9 @@ import BN from 'bn.js';
  * used throughout the CaelumX platform.
  */
 
+export interface SolanaTransaction {
+  signature: string;
+}
 // Solana Network Configuration
 export type NetworkConfig = {
   endpoint: string;

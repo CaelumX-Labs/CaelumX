@@ -1,15 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import env from '../config/env';
+import { config } from '../config';
 
-export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'No token' });
+export const authenticate1 = (req: Request, res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET) as { wallet: string };
-    req.user = { wallet: decoded.wallet };
+    const decoded = jwt.verify(token, config.jwtSecret) as { wallet: string };
+    req.user = decoded;
     next();
-  } catch (err) {
+  } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
   }
+};
+
+export function authenticate(req: Request, res: Response, next: NextFunction) {
+  if (req.session && req.session.wallet) {
+    req.user = { wallet: req.session.wallet };
+    return next();
+  }
+  return res.status(401).json({ error: 'Not authenticated' });
 }

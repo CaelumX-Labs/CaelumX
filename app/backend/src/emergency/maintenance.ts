@@ -6,7 +6,7 @@
 
 let isMaintenanceMode = false;
 
-export function enableMaintenance() {
+export function enableMaintenance1() {
   isMaintenanceMode = true;
   console.info('[MAINTENANCE] API is now in maintenance mode.');
 }
@@ -30,3 +30,6 @@ export function maintenanceMiddleware(req: any, res: { status: (arg0: number) =>
 export function isMaintenanceOn() {
   return isMaintenanceMode;
 }
+export const enableMaintenance = () => {
+  console.log('Maintenance mode enabled');
+};

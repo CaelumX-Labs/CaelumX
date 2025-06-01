@@ -210,3 +210,8 @@ export interface KYCDocument {
   rejectionReason?: string;
   zkProofReference?: string; // Reference to zero-knowledge proof
 }
+export interface ProjectData {
+  name: string;
+  description: string;
+  creatorId: string;
+}

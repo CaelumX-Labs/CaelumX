@@ -1,18 +1,8 @@
 import prisma from '../config/prisma';
 
-export async function createListing(nftId: string, price: number, sellerId: string) {
-  return await prisma.listing.create({
-    data: {
-      nftId,
-      sellerId,
-      priceLamports: BigInt(price),
-    },
-  });
-}
 
-export async function getListings() {
-  return await prisma.listing.findMany({ where: { status: 'ACTIVE' } });
-}
+
+
 
 export async function handleTradeEvent(event: { listingId: string; buyerId: string; price: number }) {
   const purchase = await prisma.purchase.create({
@@ -28,3 +18,18 @@ export async function handleTradeEvent(event: { listingId: string; buyerId: stri
   });
   return purchase;
 }
+
+export const createListing = async (nftId: string, price: number, sellerId: string) => {
+  return await prisma.listing.create({
+    data: {
+      nftId,
+      sellerId,
+      priceLamports: BigInt(price),
+      status: 'ACTIVE',
+    },
+  });
+};
+
+export const getListings = async () => {
+  return await prisma.listing.findMany({ where: { status: 'ACTIVE' } });
+};

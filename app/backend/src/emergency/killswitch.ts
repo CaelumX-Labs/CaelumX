@@ -31,3 +31,7 @@ export function killswitchMiddleware(req: any, res: { status: (arg0: number) => 
 export function isKillswitchOn() {
   return isKillSwitchActive;
 }
+export const killSwitch = async () => {
+  console.log('Emergency shutdown initiated');
+  process.exit(1);
+};

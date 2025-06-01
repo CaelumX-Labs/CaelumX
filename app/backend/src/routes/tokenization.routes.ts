@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import * as tokenizationController from '../controllers/tokenization.controller';
-import { authMiddleware } from '../middlewares/auth';
+import { mintNFT } from '../controllers/tokenization.controller';
+import { authenticate } from '../middlewares/auth';
 
 const router = Router();
 
-router.post('/mint', authMiddleware, tokenizationController.mintNFT);
+router.post('/mint', authenticate, mintNFT);
 
 export default router;

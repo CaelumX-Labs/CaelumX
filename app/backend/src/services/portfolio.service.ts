@@ -20,3 +20,6 @@ export async function getUserPortfolio(wallet: string) {
     nfts: user.nftTokens,
   };
 }
+export const getPortfolio = async (userId: string) => {
+  return { message: 'Not implemented' };
+};

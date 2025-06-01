@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit';
 
-export function generateCertificate(retirement: any): Promise<Buffer> {
+export const generateCertificate = (retirement: any): Promise<Buffer> => {
   return new Promise((resolve) => {
     const doc = new PDFDocument();
     const buffers: Buffer[] = [];
@@ -13,4 +13,4 @@ export function generateCertificate(retirement: any): Promise<Buffer> {
     doc.text(`Retired At: ${retirement.retiredAt}`);
     doc.end();
   });
-}
+};

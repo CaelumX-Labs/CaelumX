@@ -1,14 +1,21 @@
 import { Connection, Keypair } from '@solana/web3.js';
-import env from '../config/env';
+import { config } from '../config';
 
-const connection = new Connection(env.SOLANA_RPC_URL, 'confirmed');
+const connection = new Connection(config.solanaRpcUrl, 'confirmed');
 
-export async function mintNFT(projectId: string, metadataUri: string): Promise<string> {
-  // Simulate minting; replace with actual Solana program call
+export const submitProject = async (projectId: string, data: { name: string; description: string }) => {
+  return 'tx_signature_mock'; // Replace with actual Solana call
+};
+
+export const updateProjectStatus = async (projectId: string, status: string) => {
+  return 'tx_signature_mock'; // Replace with actual Solana call
+};
+
+export const mintNFT = async (projectId: string, metadataUri: string) => {
   const mint = Keypair.generate();
-  return mint.publicKey.toString();
-}
-export async function burnNFT(mintAddress: string): Promise<string> {
-  // Simulate burn; replace with actual call
-  return 'tx_signature';
-}
+  return mint.publicKey.toString(); // Replace with actual minting
+};
+
+export const burnNFT = async (mintAddress: string) => {
+  return 'tx_signature_mock'; // Replace with actual burning
+};
