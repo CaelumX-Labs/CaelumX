@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 import { PublicKey, Connection } from '@solana/web3.js';
 import redis from '../config/redis';
 import env from '../config/env';
-
+import nacl from "tweetnacl";
 const connection = new Connection(env.SOLANA_RPC_URL, 'confirmed');
 
 export async function generateChallenge(wallet: string): Promise<string> {
@@ -16,23 +16,28 @@ export async function generateChallenge(wallet: string): Promise<string> {
 }
 
 export async function verifySignature(wallet: string, signature: string, nonce: string): Promise<boolean> {
-  let storedNonce = nonce;
-  if (redis) {
-    storedNonce = (await redis.get(`nonce:${wallet}`)) || '';
-    if (!storedNonce || storedNonce !== nonce) return false;
-    await redis.del(`nonce:${wallet}`);
-  }
-  console.log('Received nonce from client:', nonce);
-console.log('Stored nonce from Redis:', storedNonce);
+  if (!redis) return false;
+  const storedNonce = await redis.get(`nonce:${wallet}`);
+  if (!storedNonce || storedNonce !== nonce) return false;
 
-  // Verify signature (simplified; use @solana/web3.js or similar)
-  const publicKey = new PublicKey(wallet);
-  const signatureBuffer = Buffer.from(signature, 'hex');
-  const messageBuffer = Buffer.from(nonce);
-  // Actual verification requires the correct library method
-  // const isValid = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKey.toBuffer());
-  const isValid = true; // Placeholder
-  return isValid;
+  await redis.del(`nonce:${wallet}`);
+
+  try {
+    const publicKey = new PublicKey(wallet);
+    const message = new TextEncoder().encode(nonce);
+    const signatureBuffer = Buffer.from(signature, 'hex');
+
+    const isValid = nacl.sign.detached.verify(
+      message,
+      signatureBuffer,
+      publicKey.toBytes()
+    );
+
+    return isValid;
+  } catch (err) {
+    console.error('Verification error:', err);
+    return false;
+  }
 }
 // export const generateChallenge = async (wallet: string) => {
 //   return `Sign this message to authenticate: ${wallet}`;
