@@ -10,38 +10,57 @@ declare module 'express-session' {
   }
 }
 
+// POST /api/auth/get-challenge
 export async function getChallenge(req: Request, res: Response) {
   const { wallet } = req.body;
-  if (!wallet) return res.status(400).json({ error: 'Wallet required' });
-  const nonce = await authService.generateChallenge(wallet);
-  res.json({ nonce });
+  if (!wallet) return res.status(400).json({ error: 'Wallet address is required.' });
+
+  try {
+    const nonce = await authService.generateChallenge(wallet);
+    return res.status(200).json({ nonce });
+  } catch (error) {
+    console.error('Error generating challenge:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
+// POST /api/auth/verify
 export async function verifySignature(req: Request, res: Response) {
   const { wallet, signature, nonce } = req.body;
+
   if (!wallet || !signature || !nonce) {
-    return res.status(400).json({ error: 'Missing fields' });
+    return res.status(400).json({ error: 'Missing wallet, signature, or nonce.' });
   }
-  const isValid = await authService.verifySignature(wallet, signature, nonce);
-  if (isValid) {
+
+  try {
+    const isValid = await authService.verifySignature(wallet, signature, nonce);
+    if (!isValid) return res.status(401).json({ error: 'Invalid signature' });
+
+    req.session.wallet = wallet;
     const token = jwt.sign({ wallet }, env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
-  } else {
-    res.status(401).json({ error: 'Invalid signature' });
+    return res.status(200).json({ token });
+  } catch (error) {
+    console.error('Error verifying signature:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
+// OPTIONAL: POST /api/auth/challenge (session-only login)
 export const challenge = async (req: Request, res: Response) => {
   const { wallet, signature, nonce } = req.body;
 
   if (!wallet || !signature || !nonce) {
-    return res.status(400).json({ error: 'Missing wallet, signature, or nonce' });
+    return res.status(400).json({ error: 'Missing wallet, signature, or nonce.' });
   }
 
-  const isValid = await authService.verifySignature(wallet, signature, nonce); // ✅ await the async function
+  try {
+    const isValid = await authService.verifySignature(wallet, signature, nonce);
+    if (!isValid) return res.status(401).json({ error: 'Invalid signature' });
 
-  if (!isValid) return res.status(401).json({ error: 'Invalid signature' });
-
-  req.session.wallet = wallet; // 💾 Save wallet to session
-  res.json({ success: true });
+    req.session.wallet = wallet;
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error in challenge login:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 };

@@ -1,12 +1,12 @@
 [toolchain]
-	anchor_version = "0.30.1"
+anchor_version = "0.30.1"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.devnet]
-minting = "7VNYAn8xGrybRLic4i6vUzmbsKhHFrnZq5cAzSMoP5PL"
+minting = "46eWqpqL7yCoWm93jtF52C84aJr9oFBJ2DZrRCiqxFcZ"
 
 [registry]
 url = "https://api.apr.dev"
