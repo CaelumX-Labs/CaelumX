@@ -1,7 +1,7 @@
 import express from 'express';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { rateLimiter } from './middlewares/rateLimiter';
+import {rateLimiter }from './middlewares/rateLimiter';
 import session from 'express-session';
 import cors from 'cors'; // ✅ Add this
 
