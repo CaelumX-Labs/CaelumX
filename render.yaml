@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: caelumx-backend
+    env: node
+    buildCommand: cd app/backend && npm install && npm run build
+    startCommand: cd app/backend && npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 10000

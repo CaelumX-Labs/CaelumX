@@ -1,9 +1,11 @@
 {
   "license": "ISC",
-  "scripts": {
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
-  },
+"scripts": {
+  "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+  "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+},
+"private": true,
+"workspaces": ["app/*"],
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.3.0",
