@@ -7,12 +7,24 @@ import cors from 'cors'; // ✅ Add this
 
 const app = express();
 
-// ✅ Add CORS before routes
-app.use(cors({
-  origin: "http://localhost:3000", // frontend origin
-  credentials: true,
-}));
+const allowedOrigins = [
+  "http://localhost:3000",               // for local dev
+  "https://www.caelum-x.com",            // your deployed backend
+];
 
+// ✅ Add CORS before routes
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
