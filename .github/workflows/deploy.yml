@@ -22,5 +22,5 @@ jobs:
             cd /home/ec2-user/CaelumX
             git pull origin main
             npm install
-            npm run build
+            tsc -b
             pm2 restart caelumx-backend
