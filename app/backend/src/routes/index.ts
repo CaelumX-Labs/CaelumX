@@ -16,7 +16,6 @@ import tokenizationRoutes from './tokenization.routes';
 import marketplaceRoutes from './marketplace.routes';
 import retirementRoutes from './retirement.routes';
 import analyticsRoutes from './analytics.routes';
-
 const router = Router();
 
 // router.get('/healthz', (req, res) => res.status(200).send('OK'));
@@ -28,7 +27,6 @@ const router = Router();
 // router.use(analyticsRoutes);
 
 // export { router };
-
 
 
 router.use('/auth', authRoutes);

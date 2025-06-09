@@ -1,15 +1,24 @@
 import multer from 'multer';
-import path from 'path';
+import { Request } from 'express';
 
-// Store files locally in /uploads
-const storage = multer.diskStorage({
-  destination: (req: any, file: any, cb: (arg0: null, arg1: string) => void) => {
-    cb(null, 'uploads/'); // Make sure this folder exists
+// Use memory storage to keep files in memory (better for IPFS uploads)
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB
+    files: 10, // Max 10 files
   },
-  filename: (req: any, file: { originalname: string; }, cb: (arg0: null, arg1: string) => void) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    // Optional: Restrict file types (e.g., PDF, images)
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, JPEG, and PNG are allowed.'));
+    }
   },
 });
 
-export const upload = multer({ storage });
+export { upload };
