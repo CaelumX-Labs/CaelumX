@@ -6,13 +6,16 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-minting = "46eWqpqL7yCoWm93jtF52C84aJr9oFBJ2DZrRCiqxFcZ"
+minting = "4NwR38YG7r4XuzVGu8ZdYLVW58kuri2qahnyAVVMR7g9"
+
+[programs.localnet]
+minting = "4NwR38YG7r4XuzVGu8ZdYLVW58kuri2qahnyAVVMR7g9"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

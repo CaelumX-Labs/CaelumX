@@ -19,7 +19,7 @@ use mpl_token_metadata::{
     types::{Creator, DataV2},
 };
 
-declare_id!("46eWqpqL7yCoWm93jtF52C84aJr9oFBJ2DZrRCiqxFcZ");
+declare_id!("4NwR38YG7r4XuzVGu8ZdYLVW58kuri2qahnyAVVMR7g9");
 
 #[program]
 pub mod minting {
@@ -88,11 +88,11 @@ pub mod minting {
         ctx: Context<MintCarbonCreditNFT>,
         metadata_title: String,
         metadata_symbol: String,
-        metadata_uri: String, // IPFS URI for metadata
-        carbon_credit_amount: u64,
-        project_type: String,
+        metadata_uri: String,
+        _carbon_credit_amount: u64,
+        _project_type: String,
     ) -> Result<()> {
-        // 1. Validate deposit account
+        // Validate deposit account
         require!(
             ctx.accounts.deposit_account.is_verified,
             ErrorCode::DepositNotVerified
@@ -104,79 +104,70 @@ pub mod minting {
 
         let deposit_account = &mut ctx.accounts.deposit_account;
 
-        // 2. Mint NFT token
+        // Mint NFT token (1 token for NFT)
         let cpi_accounts = token::MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.token_account.to_account_info(),
             authority: ctx.accounts.user.to_account_info(),
         };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-
-        // Add seeds for PDA signing
-        let user_key = ctx.accounts.user.key(); // Binding for user key
-        let seeds = &[
-            b"deposit",
-            user_key.as_ref(),
-            &[ctx.bumps.deposit_account], // Use dot notation for bump access
-        ];
-
+        
         token::mint_to(
-            CpiContext::new_with_signer(cpi_program, cpi_accounts, &[seeds]),
+            CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts),
             1,
         )?;
 
-        // 3. Prepare Creators
+        // Create Metadata using modern approach
         let creators = vec![Creator {
             address: ctx.accounts.user.key(),
             verified: true,
             share: 100,
         }];
 
-        // 4. Create Metadata Account
+        let metadata_data = DataV2 {
+            name: metadata_title,
+            symbol: metadata_symbol,
+            uri: metadata_uri,
+            seller_fee_basis_points: 0,
+            creators: Some(creators),
+            collection: None,
+            uses: None,
+        };
+
+        // Create metadata account
         let create_metadata_ix = CreateMetadataAccountV3 {
             metadata: ctx.accounts.metadata_account.key(),
             mint: ctx.accounts.mint.key(),
-            mint_authority: deposit_account.key(),
+            mint_authority: ctx.accounts.user.key(),
             payer: ctx.accounts.user.key(),
-            update_authority: (deposit_account.key(), false),
+            update_authority: (ctx.accounts.user.key(), true),
             system_program: ctx.accounts.system_program.key(),
             rent: Some(ctx.accounts.rent.key()),
         };
 
         let metadata_args = CreateMetadataAccountV3InstructionArgs {
-            data: DataV2 {
-                name: metadata_title,
-                symbol: metadata_symbol,
-                uri: metadata_uri,
-                seller_fee_basis_points: 0,
-                creators: Some(creators),
-                collection: None,
-                uses: None,
-            },
+            data: metadata_data,
             is_mutable: true,
             collection_details: None,
         };
 
-        // Invoke metadata creation
         invoke(
             &create_metadata_ix.instruction(metadata_args),
             &[
                 ctx.accounts.metadata_account.to_account_info(),
                 ctx.accounts.mint.to_account_info(),
-                deposit_account.to_account_info(),
                 ctx.accounts.user.to_account_info(),
-                ctx.accounts.token_metadata_program.to_account_info(), // Correct program ID
+                ctx.accounts.token_metadata_program.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 ctx.accounts.rent.to_account_info(),
             ],
         )?;
 
-        // 5. Create Master Edition
+        // Create Master Edition
         let create_master_edition_ix = CreateMasterEditionV3 {
-            edition: ctx.accounts.master_edition.to_account_info().key(),
+            edition: ctx.accounts.master_edition.key(),
             mint: ctx.accounts.mint.key(),
-            update_authority: deposit_account.key(),
-            mint_authority: deposit_account.key(),
+            update_authority: ctx.accounts.user.key(),
+            mint_authority: ctx.accounts.user.key(),
             payer: ctx.accounts.user.key(),
             metadata: ctx.accounts.metadata_account.key(),
             token_program: ctx.accounts.token_program.key(),
@@ -185,25 +176,23 @@ pub mod minting {
         };
 
         let master_edition_args = CreateMasterEditionV3InstructionArgs {
-            max_supply: Some(1), // Limited edition
+            max_supply: Some(1),
         };
 
-        // Invoke master edition creation
         invoke(
             &create_master_edition_ix.instruction(master_edition_args),
             &[
                 ctx.accounts.master_edition.to_account_info(),
                 ctx.accounts.mint.to_account_info(),
-                deposit_account.to_account_info(),
                 ctx.accounts.user.to_account_info(),
                 ctx.accounts.metadata_account.to_account_info(),
-                ctx.accounts.token_metadata_program.to_account_info(), // Correct program ID
+                ctx.accounts.token_metadata_program.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 ctx.accounts.rent.to_account_info(),
             ],
         )?;
 
-        // 6. Reset credits after successful minting
+        // Reset credits after successful minting
         deposit_account.total_credits = 0;
 
         Ok(())
@@ -242,26 +231,24 @@ pub mod minting {
         let trade = &ctx.accounts.trade_account;
 
         // Transfer SOL payment from buyer to seller
-        let transfer_instruction = system_program::Transfer {
-            from: ctx.accounts.buyer.to_account_info(),
-            to: ctx.accounts.seller.to_account_info(),
-        };
-
         system_program::transfer(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
-                transfer_instruction
+                system_program::Transfer {
+                    from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.seller.to_account_info(),
+                }
             ),
             trade.price
         )?;
 
-        // Transfer NFT to buyer
+        // Transfer NFT from seller to buyer
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
-                    from: ctx.accounts.token_account.to_account_info(),
-                    to: ctx.accounts.token_account.to_account_info(), // Destination token account
+                    from: ctx.accounts.seller_token_account.to_account_info(),
+                    to: ctx.accounts.buyer_token_account.to_account_info(),
                     authority: ctx.accounts.seller.to_account_info(),
                 }
             ),
@@ -325,7 +312,7 @@ pub struct InitializeDepositAccount<'info> {
         init, 
         payer = user, 
         space = 8 + 32 + 32 + 8 + 2 + 1,
-        seeds = [b"deposit"],
+        seeds = [b"deposit", user.key().as_ref()],
         bump
     )]
     pub deposit_account: Account<'info, DepositAccount>,
@@ -336,7 +323,12 @@ pub struct InitializeDepositAccount<'info> {
 
 #[derive(Accounts)]
 pub struct DepositCredits<'info> {
-    #[account(mut, has_one = owner, seeds = [b"deposit"], bump)]
+    #[account(
+        mut, 
+        has_one = owner, 
+        seeds = [b"deposit", owner.key().as_ref()], 
+        bump
+    )]
     pub deposit_account: Account<'info, DepositAccount>,
     pub owner: Signer<'info>,
 }
@@ -344,22 +336,25 @@ pub struct DepositCredits<'info> {
 pub struct MintCarbonCreditNFT<'info> {
     #[account(
         mut,
-        seeds = [b"deposit"],
+        seeds = [b"deposit", user.key().as_ref()],
         bump,
-        has_one = owner,
+        has_one = owner @ ErrorCode::Unauthorized,
         constraint = deposit_account.is_verified @ ErrorCode::DepositNotVerified
-
     )]
-    pub deposit_account: Account<'info, DepositAccount>, // Account storing credits
-    pub owner: Signer<'info>,
+    pub deposit_account: Account<'info, DepositAccount>,
+    
+    /// CHECK: Owner matches deposit account - this should be the same as user
+    #[account(constraint = owner.key() == user.key() @ ErrorCode::Unauthorized)]
+    pub owner: UncheckedAccount<'info>,
 
     #[account(
         init,
         payer = user,
         mint::decimals = 0,
-        mint::authority = deposit_account,
+        mint::authority = user,
+        mint::freeze_authority = user,
     )]
-    pub mint: Account<'info, Mint>, // The mint for the carbon credit token
+    pub mint: Account<'info, Mint>,
 
     #[account(
         init,
@@ -367,8 +362,9 @@ pub struct MintCarbonCreditNFT<'info> {
         associated_token::mint = mint,
         associated_token::authority = user
     )]
-    pub token_account: Account<'info, TokenAccount>, // The associated token account to hold the minted NFT
-    /// CHECK: metadata Account
+    pub token_account: Account<'info, TokenAccount>,
+    
+    /// CHECK: Metadata PDA
     #[account(
         mut,
         seeds = [
@@ -376,11 +372,12 @@ pub struct MintCarbonCreditNFT<'info> {
             token_metadata_program.key().as_ref(), 
             mint.key().as_ref()
         ],
-        bump
+        bump,
+        seeds::program = token_metadata_program.key()
     )]
-    pub metadata_account: Account<'info, MetadataAccount>,
+    pub metadata_account: UncheckedAccount<'info>,
 
-    /// CHECK: master edition Account
+    /// CHECK: Master Edition PDA  
     #[account(
         mut,
         seeds = [
@@ -389,28 +386,35 @@ pub struct MintCarbonCreditNFT<'info> {
             mint.key().as_ref(), 
             b"edition"
         ],
-        bump
+        bump,
+        seeds::program = token_metadata_program.key()
     )]
-    pub master_edition: UncheckedAccount<'info>, // The master edition account for the NFT
+    pub master_edition: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub user: Signer<'info>, // User signing the transaction
-
-    pub token_program: Program<'info, Token>, // SPL Token program
-    pub associated_token_program: Program<'info, AssociatedToken>, // Associated token program
-
-    /// CHECK: This is the Metaplex Token Metadata program ID, and it is a trusted constant.
-    pub token_metadata_program: Program<'info, Metadata>, // Ensure correct program ID
-    pub system_program: Program<'info, System>, // System program
-    pub rent: Sysvar<'info, Rent>,              // Rent sysvar to check rent exemption
+    pub user: Signer<'info>,
+    
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_metadata_program: Program<'info, Metadata>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
 pub struct VerifyDeposit<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"deposit", deposit_account.owner.as_ref()],
+        bump
+    )]
     pub deposit_account: Account<'info, DepositAccount>,
     pub verifier: Signer<'info>,
-    pub config: Account<'info, ProgramConfig>, // Add this
+    #[account(
+        seeds = [b"config"],
+        bump
+    )]
+    pub config: Account<'info, ProgramConfig>,
 }
 
 
@@ -441,9 +445,9 @@ pub struct RetireCredit<'info> {
     pub mint: Account<'info, Mint>,
     #[account(mut)]
     pub token_account: Account<'info, TokenAccount>,
-    /// CHECK: Metadata account for the NFT
+    /// CHECK: Metadata account for the NFT - may not be initialized for simple tokens
     #[account(mut)]
-    pub metadata_account: Account<'info, MetadataAccount>,
+    pub metadata_account: UncheckedAccount<'info>,
     #[account(mut)]
     pub owner: Signer<'info>,
     pub token_program: Program<'info, Token>,
@@ -480,12 +484,20 @@ pub struct BuyNFT<'info> {
     #[account(mut)]
     pub mint: Account<'info, Mint>,
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub seller_token_account: Account<'info, TokenAccount>,
+    #[account(
+        init_if_needed,
+        payer = buyer,
+        associated_token::mint = mint,
+        associated_token::authority = buyer
+    )]
+    pub buyer_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub seller: SystemAccount<'info>,
+    pub seller: Signer<'info>,
     #[account(mut)]
     pub buyer: Signer<'info>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
