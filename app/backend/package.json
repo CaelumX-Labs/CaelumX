@@ -8,13 +8,15 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:generate": "prisma generate",
-    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:migrate": "prisma migrate dev --name init --schema=src/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
+    "prisma:deploy": "prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "prisma:seed": "ts-node src/prisma/seed.ts",
     "db:seed": "npm run prisma:seed"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node src/prisma/seed.ts",
+    "schema": "src/prisma/schema.prisma"
   },
   "dependencies": {
     "@helia/http": "^2.1.2",

@@ -33,20 +33,34 @@ print_header "Pre-deployment Checks"
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
-    print_error "Node.js is not installed"
+    print_error "Node.js is not installed. Run ./setup-server.sh first."
     exit 1
 fi
 
 # Check if Yarn is installed
 if ! command -v yarn &> /dev/null; then
-    print_error "Yarn is not installed"
+    print_error "Yarn is not installed. Run ./setup-server.sh first."
     exit 1
 fi
 
 # Check if PM2 is installed
 if ! command -v pm2 &> /dev/null; then
-    print_status "Installing PM2..."
-    npm install -g pm2
+    print_error "PM2 is not installed. Run ./setup-server.sh first."
+    exit 1
+fi
+
+# Check if Nginx is installed
+if ! command -v nginx &> /dev/null; then
+    print_error "Nginx is not installed. Run ./setup-server.sh first."
+    exit 1
+fi
+
+# Check if SSL certificates exist
+if [ ! -f "/etc/nginx/ssl/certificate.crt" ] || [ ! -f "/etc/nginx/ssl/private.key" ]; then
+    print_warning "SSL certificates not found at expected locations:"
+    print_warning "  - /etc/nginx/ssl/certificate.crt"
+    print_warning "  - /etc/nginx/ssl/private.key"
+    print_warning "Continuing anyway..."
 fi
 
 print_header "Building Application"
@@ -66,13 +80,17 @@ fi
 
 print_header "Database Setup"
 
-# Run Prisma migrations
+# Run Prisma migrations with correct schema path
 print_status "Running database migrations..."
-npx prisma migrate deploy
+npx prisma migrate deploy --schema=src/prisma/schema.prisma
 
-# Generate Prisma client
+# Generate Prisma client with correct schema path
 print_status "Generating Prisma client..."
-npx prisma generate
+npx prisma generate --schema=src/prisma/schema.prisma
+
+# Run database seeding
+print_status "Seeding database..."
+npm run prisma:seed
 
 print_header "Nginx Configuration"
 
