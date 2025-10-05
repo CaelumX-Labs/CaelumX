@@ -18,7 +18,7 @@ import retirementRoutes from './retirement.routes';
 import analyticsRoutes from './analytics.routes';
 const router = Router();
 
-// router.get('/healthz', (req, res) => res.status(200).send('OK'));
+router.get('/healthz', (req, res) => res.status(200).send('OK'));
 // router.use(authRoutes);
 // router.use(registryRoutes);
 // router.use(tokenizationRoutes);

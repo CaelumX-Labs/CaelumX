@@ -8,7 +8,12 @@ import cors from 'cors'; // ✅ Add this
 const app = express();
 
 
-const allowedOrigins = ["http://localhost:3000", "https://www.caelum-x.com"];
+const allowedOrigins = [
+  "http://localhost:3000", 
+  "https://www.caelum-x.com",
+  "https://caelum-x.com",
+  "https://api.caelum-x.com"
+];
 
 app.use(cors({
   origin: function(origin, callback){
